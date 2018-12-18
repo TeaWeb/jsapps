@@ -39,7 +39,10 @@ func TestPlugin(t *testing.T) {
 }
 
 func TestLoadJs(t *testing.T) {
-	loadJs("/Users/liuxiangchao/Documents/Projects/pp/apps/TeaWebGit/build/src/main/configs/jsapps.js")
+	apps := loadJs("/Users/liuxiangchao/Documents/Projects/pp/apps/TeaWebGit/build/src/main/configs/jsapps.js")
+	for _, app := range apps {
+		t.Log(app.Name)
+	}
 }
 
 func TestElasticSearch(t *testing.T) {
@@ -79,4 +82,39 @@ func TestElasticSearch(t *testing.T) {
 		t.Log("apps:", apps)
 		t.Log("version:", apps[0].Version)
 	}
+}
+
+
+func TestPhpFpm(t *testing.T) {
+	engine := probes.NewScriptEngine()
+	err := engine.RunScript(`(function () {
+	var probe = new ProcessProbe(); // 构造对象
+	probe.author = ""; // 探针作者
+	probe.id = "local_1545123416213326756"; // 探针ID，
+	probe.name = "Redis"; // App名称
+	probe.site = "https://redis.io/"; // App官方网站
+	probe.docSite = "https://redis.io/documentation"; // 官方文档网址
+	probe.developer = "redislabs"; // App开发者公司、团队或者个人名称
+	probe.commandName = "redis-server"; // App启动的命令名称
+	probe.commandPatterns = [""]; // 进程匹配规则
+	probe.commandVersion = "{commandFile} -v"; // 获取版本信息的命令
+
+	// 进程筛选
+	probe.onProcess(function (p) {
+		return true;
+	});
+
+	// 版本信息分析
+	probe.onParseVersion(function (v) {
+		return v;
+	});
+
+	// 运行探针
+	probe.run();
+})()`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("apps:", engine.Apps()[0])
 }

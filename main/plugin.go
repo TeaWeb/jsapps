@@ -57,7 +57,7 @@ func loadJs(jsFile string) (results []*apps.App) {
 			log.Println("[jsapps]" + err.Error())
 			continue
 		} else {
-			results = engine.Apps()
+			results = append(results, engine.Apps() ...)
 		}
 	}
 	return
