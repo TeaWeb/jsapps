@@ -103,23 +103,23 @@ func (this *Parser) AddProbe(probe *probes.ProcessProbe) error {
 
 	funcId := fmt.Sprintf("local_%d", time.Now().UnixNano())
 	template := `function () {
-		var probe = new ProcessProbe();
-		probe.author = "";
-		probe.id = ${ID};
-		probe.name = ${NAME};
-		probe.site = ${SITE};
-		probe.docSite = ${DOC_SITE};
-		probe.developer = ${DEVELOPER};
-		probe.commandName = ${COMMAND_NAME};
-		probe.commandPatterns = ${COMMAND_PATTERNS};
-		probe.commandVersion = ${COMMAND_VERSION};
-		probe.onProcess(function (p) {
-			return true;
-		});
- 		probe.onParseVersion(function (v) {
- 			return v;
- 		});
-		probe.run();
+	var probe = new ProcessProbe();
+	probe.author = "";
+	probe.id = ${ID};
+	probe.name = ${NAME};
+	probe.site = ${SITE};
+	probe.docSite = ${DOC_SITE};
+	probe.developer = ${DEVELOPER};
+	probe.commandName = ${COMMAND_NAME};
+	probe.commandPatterns = ${COMMAND_PATTERNS};
+	probe.commandVersion = ${COMMAND_VERSION};
+	probe.onProcess(function (p) {
+		return true;
+	});
+	probe.onParseVersion(function (v) {
+		return v;
+	});
+	probe.run();
 }`
 	if len(probe.CommandPatterns) == 0 {
 		probe.CommandPatterns = []string{}
@@ -170,6 +170,52 @@ func (this *Parser) RemoveProbe(probeId string) error {
 	content = regexp.MustCompile("\"probes\":\\s*\\[(.|\n)*]").ReplaceAllString(content, "\"probes\": ["+strings.Join(funcs, ",\n")+"]")
 
 	return ioutil.WriteFile(this.jsFile, []byte(content), 0666)
+}
+
+// 替换Probe
+func (this *Parser) ReplaceProbe(probeId string, funcString string) error {
+	if len(probeId) == 0 {
+		return errors.New("'probeId' should not be empty")
+	}
+	content, o, err := this.LoadFunctions()
+	if err != nil {
+		return err
+	}
+
+	funcs := []string{}
+	for _, key := range o.Keys() {
+		f, _ := o.Get(key)
+		s := f.String()
+		if strings.Index(s, "\""+probeId+"\"") > 0 {
+			funcs = append(funcs, funcString)
+			continue
+		}
+		funcs = append(funcs, s)
+	}
+
+	content = regexp.MustCompile("\"probes\":\\s*\\[(.|\n)*]").ReplaceAllString(content, "\"probes\": ["+strings.Join(funcs, ",\n")+"]")
+
+	return ioutil.WriteFile(this.jsFile, []byte(content), 0666)
+}
+
+// 查找Probe
+func (this *Parser) FindProbeFunction(probeId string) (string, error) {
+	if len(probeId) == 0 {
+		return "", errors.New("'probeId' should not be empty")
+	}
+	_, o, err := this.LoadFunctions()
+	if err != nil {
+		return "", err
+	}
+
+	for _, key := range o.Keys() {
+		f, _ := o.Get(key)
+		s := f.String()
+		if strings.Index(s, "\""+probeId+"\"") > 0 {
+			return s, nil
+		}
+	}
+	return "", errors.New("function not found")
 }
 
 // 加载函数数据

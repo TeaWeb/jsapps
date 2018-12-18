@@ -145,7 +145,7 @@ func (this *ScriptEngine) runProcessProbe(call otto.FunctionCall) otto.Value {
 						"name":      process.Name,
 						"pid":       process.Pid,
 						"ppid":      process.Ppid,
-						"Cwd":       process.Cwd,
+						"cwd":       process.Cwd,
 						"user":      process.User,
 						"uid":       process.Uid,
 						"gid":       process.Gid,
